@@ -525,6 +525,18 @@ module PrismPay
             xml.expmon credit_card.month
             xml.expyear credit_card.year
             xml.cvv2 credit_card.verification_value          
+            if credit_card.recur.to_s == "1" && amountrecurr > 0
+               xml.recurring("xsi:type" => "urn:Recur") { #nees method
+               xml.create 1
+               xml.billingcycle 2
+               xml.billingmax -1
+               xml.start 1
+               xml.amount amountrecurr
+             }
+            else
+              #abort(credit_card.recur.to_s)
+            end           
+            
           end
           if(paytype==2)          
             #check
@@ -564,17 +576,6 @@ module PrismPay
           # xml.dlnum 
           # xml.ssnum           
 
-          if credit_card.recur.to_s == "1" && amountrecurr > 0
-             xml.recurring("xsi:type" => "urn:Recur") { #nees method
-             xml.create 1
-             xml.billingcycle 2
-             xml.billingmax -1
-             xml.start 1
-             xml.amount amountrecurr
-           }
-          else
-            #abort(credit_card.recur.to_s)
-          end           
         }
       }
       return xml_block
