@@ -40,7 +40,7 @@ module PrismPay
     # ##########################################################
     def profile_add(paytype, amount, amountrecurr,bank_account, credit_card, subid, options)
       # response = @client.request :process_profile_sale do
-      response = @client.request 'processProfileAdd' do
+      response = @client.request (paytype == 1 ? 'processCCProfileAdd' : 'processCKProfileAdd')  do
         http.open_timeout=30
         http.read_timeout=30
         http.auth.ssl.verify_mode = :none
@@ -52,7 +52,7 @@ module PrismPay
     def profile_sale(amount, profile_id, last_four, subid, options = {})
       # response = @client.request :process_profile_sale do
       response = @client.request 'processProfileSale' do
-        http.open_timeout=30
+        http.open_timeoCCProut=30
         http.read_timeout=30
         http.auth.ssl.verify_mode = :none
         soap.body &build_profile_sale(amount, profile_id, last_four, subid, options)
@@ -441,7 +441,7 @@ module PrismPay
       end
 
       xml_block  = Proc.new{ |xml| 
-        xml.ccinfo("xsi:type" => "urn:CreditCardInfo") { 
+        xml.ccinfo("xsi:type" => (paytype==1 ? "urn:CreditCardInfo" : "urn:ACHInfo")) { 
           xml.acctid @acctid
           xml.merchantpin @password if @password
           # xml.merchantpin options[:password] if options.has_key?(:password)
@@ -515,7 +515,7 @@ module PrismPay
         ship_address = options[:shipping_address]
       end   
       xml_block = Proc.new {|xml|
-        xml.miscprocess("xsi:type" => "urn:ProfileAdd"){ 
+        xml.miscprocess("xsi:type" => "urn:CreditCardInfo"){ 
           xml.acctid @acctid          
           xml.subid subid if subid
           if(paytype==1)
