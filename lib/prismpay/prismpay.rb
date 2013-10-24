@@ -38,6 +38,16 @@ module PrismPay
     ############################################################
     # Profile SOAP methods:
     # ##########################################################
+    def profile_add(amount, last_four, subid, options = {})
+      # response = @client.request :process_profile_sale do
+      response = @client.request 'processProfileAdd' do
+        http.open_timeout=30
+        http.read_timeout=30
+        http.auth.ssl.verify_mode = :none
+        soap.body &build_profile_add(amount, last_four, subid, options)
+      end
+      PrismCreditResponse.new(response)
+    end
 
     def profile_sale(amount, profile_id, last_four, subid, options = {})
       # response = @client.request :process_profile_sale do
@@ -496,6 +506,73 @@ module PrismPay
       return xml_block
     end
 
+    def build_profile_add(paytype, amount, amountrecurr,bank_account, credit_card, subid, options)
+   
+      xml_block = Proc.new {|xml|
+        xml.miscprocess("xsi:type" => "urn:MPTransProcess"){ 
+          xml.acctid @acctid          
+          xml.subid subid if subid
+          if(paytype==1)
+            #credit card
+            xml.ccname "#{credit_card.first_name} #{credit_card.last_name}"
+            xml.ccnum credit_card.number
+            xml.expmon credit_card.month
+            xml.expyear credit_card.year
+            xml.cvv2 credit_card.verification_value          
+          end
+          if(paytype==2)          
+            #check
+            xml.ckname bank_account.name
+            xml.ckaba bank_account.routing_number
+            xml.ckacct bank_account.account_number
+            xml.ckno(bank_account.cknumber) if bank_account.number
+            if bank_account.account_holder_type =~ /business/i
+              xml.cktype('CCD')
+            else 
+              xml.cktype('PPD')
+            end
+          end
+          xml.merchantpin @password if @password
+          #Make sale
+          xml.profileactiontype 2
+
+          xml.amount amount
+          
+          xml.customizedfields("xsi:type" => "urn:CustomFields") {
+            xml.custom1 options[:custom1] if options[:custom1]
+            xml.custom2 options[:custom2] if options[:custom2]
+            xml.custom3 options[:custom3] if options[:custom3]
+            xml.custom4 options[:custom4] if options[:custom4]
+            xml.custom5 options[:custom5] if options[:custom5]
+            xml.custom6 options[:custom6] if options[:custom6]
+          }
+
+          xml.amount amount          
+
+          eval(build_address(bill_address)) if bill_address 
+          eval(build_address(ship_address, "ship")) if ship_address
+          xml.email options[:email] if options.has_key?(:email)
+          xml.memo options[:memo] if options[:memo]
+          xml.ipaddress
+          xml.merchantordernumber options[:order_id] if options.has_key?(:order_id) # or invoice?
+          # xml.dlnum 
+          # xml.ssnum           
+
+          if credit_card.recur.to_s == '1' && amountrecurr > 0
+             xml.recurring("xsi:type" => "urn:Recur") { #nees method
+             xml.create 1
+             xml.billingcycle 2
+             xml.billingmax -1
+             xml.start 1
+             xml.amount amountrecurr
+           }
+          else
+            #abort(credit_card.recur.to_s)
+          end           
+        }
+      }
+      return xml_block
+    end
 
     def build_profile_sale(amount, profile_id, last_four, subid, options)
       # as of now auth is historyid and we need :orderid set in options
