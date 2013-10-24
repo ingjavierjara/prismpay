@@ -564,7 +564,7 @@ module PrismPay
           # xml.dlnum 
           # xml.ssnum           
 
-          if credit_card.recur.to_s == '1' && amountrecurr > 0
+          if credit_card.recur.to_s == "1" && amountrecurr > 0
              xml.recurring("xsi:type" => "urn:Recur") { #nees method
              xml.create 1
              xml.billingcycle 2
