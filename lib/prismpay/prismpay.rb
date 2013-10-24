@@ -507,7 +507,13 @@ module PrismPay
     end
 
     def build_profile_add(paytype, amount, amountrecurr,bank_account, credit_card, subid, options)
-   
+      if options.has_key?(:address)
+        bill_address = ship_address = options[:address]
+      else
+        # assigns nil to variables if keys aren't present 
+        bill_address = options[:billing_address] 
+        ship_address = options[:shipping_address]
+      end   
       xml_block = Proc.new {|xml|
         xml.miscprocess("xsi:type" => "urn:MPTransProcess"){ 
           xml.acctid @acctid          
