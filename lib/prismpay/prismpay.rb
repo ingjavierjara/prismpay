@@ -38,13 +38,13 @@ module PrismPay
     ############################################################
     # Profile SOAP methods:
     # ##########################################################
-    def profile_add(amount, last_four, subid, options = {})
+    def profile_add(paytype, amount, amountrecurr,bank_account, credit_card, subid, options)
       # response = @client.request :process_profile_sale do
       response = @client.request 'processProfileAdd' do
         http.open_timeout=30
         http.read_timeout=30
         http.auth.ssl.verify_mode = :none
-        soap.body &build_profile_add(amount, last_four, subid, options)
+        soap.body &build_profile_add(paytype, amount, amountrecurr,bank_account, credit_card, subid, options)
       end
       PrismCreditResponse.new(response)
     end
