@@ -515,7 +515,7 @@ module PrismPay
         ship_address = options[:shipping_address]
       end   
       xml_block = Proc.new {|xml|
-        xml.miscprocess("xsi:type" => "urn:MPTransProcess"){ 
+        xml.miscprocess("xsi:type" => "urn:ProfileAdd"){ 
           xml.acctid @acctid          
           xml.subid subid if subid
           if(paytype==1)
